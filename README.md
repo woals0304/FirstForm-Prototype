@@ -61,6 +61,8 @@ npm.cmd run preview
 - `src/App.tsx`: 현장·강호 화면과 무공·병기·기록 게임 창
 - `src/Art.tsx`: 픽셀 풍경 캔버스, 스프라이트·격자 아이콘·활동 효과
 - `src/useGame.ts`: 기존 시계·부재 정산·브라우저 저장 연결
+- `src/combatMotion.ts`, `src/CombatScene.tsx`, `src/combat.css`: 공간 전투의 좌표·동작·표현
+- `src/combatMotion.test.ts`: 공간 표현 전용 검증
 - `src/style.css`: 반응형 게임 HUD와 픽셀 UI
 - `public/art/`: 새로 생성한 픽셀 에셋과 글꼴 라이선스
 - `src/game.test.ts`: 전투·성장·해금·추천·저장 검증
@@ -68,5 +70,6 @@ npm.cmd run preview
 - [첫 시제품 실행 검증](docs/verification.md)
 - [픽셀 화면 개편과 최신 검증](docs/pixel-presentation.md)
 - [이미지 생성 프롬프트](docs/pixel-art-prompts.md)
+- [공간 자동 전투와 최신 검증](docs/spatial-combat.md)
 
 별도 로컬 Git 저장소로 관리합니다. 원격 저장소나 배포는 생성하지 않았습니다.

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import type { GameState } from "./game";
-import { arts, maxHp, regions, weapons } from "./game";
+import { maxHp, regions } from "./game";
 export const sceneArt = [
   "/art/bamboo.png",
   "/art/stockade.png",
@@ -324,9 +324,14 @@ export function PixelBackdrop({ src, label }: { src: string; label: string }) {
     image.src = src;
     const observer = new ResizeObserver(draw);
     observer.observe(canvas);
+    // Entry/exit changes the ground camera without resizing the viewport.
+    const sceneObserver = new MutationObserver(draw);
+    if (canvas.parentElement)
+      sceneObserver.observe(canvas.parentElement, { childList: true });
     return () => {
       disposed = true;
       observer.disconnect();
+      sceneObserver.disconnect();
     };
   }, [src]);
   return (
@@ -366,45 +371,15 @@ export function Meter({
   );
 }
 export function Stage({ state }: { state: GameState }) {
-  const b = state.battle;
-  const attack =
-    !!b && b.turn > 0 && b.turn % weapons[state.weapon].interval === 0;
+  if (state.battle) return null;
   const collect = state.mode === "explore" && state.phase >= 3;
-  const frame =
-    state.mode === "rest"
-      ? 10
-      : b
-        ? attack
-          ? state.weapon === "saber"
-            ? 6
-            : state.weapon === "spear"
-              ? 7
-              : 5
-          : state.weapon === "saber"
-            ? 6
-            : state.weapon === "spear"
-              ? 7
-              : 4
-        : collect
-          ? state.phase === 3
-            ? 8
-            : 9
-          : 0;
-  const last = state.log.filter((e) => e.time === state.totalSeconds);
-  const dealt = last.find((e) => e.text.includes("피해"));
-  const hurt = last.find(
-    (e) => e.text.includes("체력") && e.text.includes("감소"),
-  );
-  const dodge = last.find((e) => e.text.includes("피했"));
   const label = state.paused
     ? "잠시 멈춰 있습니다"
-    : b
-      ? `${b.template.name}과 자동 전투`
-      : state.mode === "rest"
-        ? "운기 조식으로 체력 회복"
-        : collect
-          ? regions[state.region].activity
-          : "산길을 따라 이동 중";
+    : state.mode === "rest"
+      ? "운기 조식으로 체력 회복"
+      : collect
+        ? regions[state.region].activity
+        : "산길을 따라 이동 중";
   return (
     <div
       className={`stage mode-${state.mode} ${collect ? "collecting" : ""} ${state.paused ? "paused" : ""}`}
@@ -413,13 +388,11 @@ export function Stage({ state }: { state: GameState }) {
       data-activity={
         state.paused
           ? "paused"
-          : b
-            ? "battle"
-            : state.mode === "rest"
-              ? "rest"
-              : collect
-                ? "collect"
-                : "walk"
+          : state.mode === "rest"
+            ? "rest"
+            : collect
+              ? "collect"
+              : "walk"
       }
     >
       <div className="ambient-leaves" aria-hidden="true">
@@ -427,18 +400,22 @@ export function Stage({ state }: { state: GameState }) {
           <i key={i} style={{ "--i": i } as CSSProperties} />
         ))}
       </div>
-      <div
-        className={`hero-actor actor ${attack ? "attacking" : ""} ${hurt ? "hurt" : ""}`}
-      >
+      <div className="hero-actor actor">
         <div className="actor-caption">
           무명의 무인<span>단련 {Math.floor(state.xp / 80)}</span>
         </div>
         <div className="sprite-shadow" />
         <Sprite
-          frame={frame}
-          className={
-            !b && !collect && state.mode === "explore" ? "walking" : ""
+          frame={
+            state.mode === "rest"
+              ? 10
+              : collect
+                ? state.phase === 3
+                  ? 8
+                  : 9
+                : 0
           }
+          className={!collect && state.mode === "explore" ? "walking" : ""}
         />
         {state.mode === "rest" && (
           <div className="recovery-effect">
@@ -448,71 +425,8 @@ export function Stage({ state }: { state: GameState }) {
           </div>
         )}
         {collect && <span className="gather-spark">✦</span>}
-        {hurt && (
-          <span
-            key={`hurt-${state.totalSeconds}`}
-            className="float-number hurt-number"
-          >
-            −{hurt.text.match(/체력 (\d+)/)?.[1]}
-          </span>
-        )}
         <Meter value={state.hp} max={maxHp(state)} label="장면 무인 체력" />
       </div>
-      {b &&
-        b.health.map((hp, i) => {
-          const animal = /들개|늑대/.test(b.template.name);
-          const f = animal
-            ? b.boss
-              ? 13
-              : 12
-            : /철갑|호위|수문장/.test(b.template.name)
-              ? 15
-              : 14;
-          return hp > 0 ? (
-            <div
-              key={`${b.template.name}-${i}`}
-              className={`enemy-actor actor enemy-${i} ${b.boss ? "boss-actor" : ""} ${animal ? "animal" : ""} ${b.turn > 0 && b.turn % b.template.interval === 0 ? "enemy-attack" : ""}`}
-              style={{ "--enemy-index": i } as CSSProperties}
-            >
-              <div className="sprite-shadow" />
-              <Sprite frame={f} />
-              <Meter
-                value={hp}
-                max={b.template.hp}
-                label={`${b.template.name} ${i + 1} 체력`}
-                tone="rust"
-              />
-              {i === b.health.findIndex((h) => h > 0) && dealt && (
-                <span
-                  key={`dealt-${state.totalSeconds}`}
-                  className="float-number"
-                >
-                  {dealt.text.match(/(\d+) 피해/)?.[1]}
-                </span>
-              )}
-              {i === 0 && dodge && (
-                <span
-                  key={`dodge-${state.totalSeconds}`}
-                  className="float-number dodge-number"
-                >
-                  회피
-                </span>
-              )}
-            </div>
-          ) : null;
-        })}
-      {b && attack && !dodge && (
-        <div
-          key={`slash-${state.totalSeconds}`}
-          className={`slash-effect ${state.art}`}
-          aria-hidden="true"
-        />
-      )}
-      {b && attack && (
-        <div className="technique-callout" key={`art-${state.totalSeconds}`}>
-          {arts[state.art].name}
-        </div>
-      )}
       <div className="scene-state-caption">{label}</div>
     </div>
   );

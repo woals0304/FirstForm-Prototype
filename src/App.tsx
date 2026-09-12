@@ -23,6 +23,7 @@ import {
 } from "./Art";
 import type { IconName } from "./Art";
 import { useGame } from "./useGame";
+import { CombatScene } from "./CombatScene";
 const money = (n: number) => Math.floor(n).toLocaleString("ko-KR");
 type Panel = "arts" | "weapons" | "report" | "help" | null;
 const panelNames = {
@@ -148,6 +149,7 @@ export default function App() {
           />
           <div className="edge-shade" aria-hidden="true" />
           <Stage state={state} />
+          <CombatScene state={state} />
         </>
       ) : (
         <div className="map-page-texture" />
