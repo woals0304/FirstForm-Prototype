@@ -4,6 +4,7 @@ import type { GameState } from "./game";
 import { Meter, Sprite } from "./Art";
 import { CombatMotion, FIELD, weaponMotion } from "./combatMotion";
 import "./combat.css";
+import { CombatArena } from "./CombatArena";
 
 export function CombatScene({ state }: { state: GameState }) {
   const [motion] = useState(() => new CombatMotion(state));
@@ -48,8 +49,6 @@ export function CombatScene({ state }: { state: GameState }) {
     return () => observer.disconnect();
   }, [motion.active]);
   if (!motion.active) return null;
-  const hero = motion.actors[0],
-    target = motion.actors.find((a) => a.id === motion.target);
   const enemies = motion.actors.slice(1),
     alive = enemies.filter((a) => a.hp > 0);
   const phase =
@@ -61,20 +60,11 @@ export function CombatScene({ state }: { state: GameState }) {
           ? "안전 후퇴"
           : "자동 교전";
   const feet = [4, 4, 4, 4, 11, 12, 11, 11, 14, 14, 15, 14, 27, 28, 26, 25];
-  const heads = [14, 16, 14, 16, 19, 31, 22, 31, 7, 42, 39, 9, 54, 27, 15, 4];
-  const poseText = {
-    approach: "접근",
-    guard: "간격 유지",
-    strike: "공격",
-    hit: "경직",
-    fall: "쓰러짐",
-    down: "",
-    withdraw: "후퇴",
-  };
   return (
     <>
+      <CombatArena region={motion.region} />
       <section
-        className="spatial-enemy-hud enemy-hud pixel-frame"
+        className="spatial-enemy-hud"
         aria-label="공간 전투 상태"
       >
         <span>
@@ -91,12 +81,13 @@ export function CombatScene({ state }: { state: GameState }) {
             ? "호흡을 고르고 길을 이어갑니다"
             : motion.phase === "retreat"
               ? "전리품을 지키고 물러납니다"
-              : `${alive.length}체 · ${target ? `${target.id + 1}번 적과 교전` : "교전 마무리"}`}
+              : `남은 적 ${alive.length}`}
         </small>
       </section>
       <div
         ref={box}
         className={`combat-space ${state.paused ? "motion-paused" : ""}`}
+        data-arena={motion.region}
         data-phase={motion.phase}
         role="region"
         aria-label="자동 공간 전투"
@@ -109,32 +100,6 @@ export function CombatScene({ state }: { state: GameState }) {
             transform: `translate(-50%,-50%) scale(${scale})`,
           }}
         >
-          <svg
-            className="combat-ground"
-            viewBox={`0 0 ${FIELD.width} ${FIELD.height}`}
-            aria-hidden="true"
-          >
-            <ellipse
-              cx="360"
-              cy="207"
-              rx="318"
-              ry="124"
-              fill="#d8ca9720"
-              stroke="#f1dfaf66"
-              strokeWidth="2"
-              strokeDasharray="4 12"
-            />
-            {target && hero.moving && (
-              <path
-                className="pursuit-trail"
-                d={`M${hero.x} ${hero.y} L${target.x} ${target.y}`}
-                stroke="#f7e5ab"
-                strokeWidth="2"
-                strokeDasharray="4 10"
-                fill="none"
-              />
-            )}
-          </svg>
           {motion.actors.map((a) => {
             const isHero = a.id === -1,
               dead = a.hp <= 0;
@@ -171,8 +136,8 @@ export function CombatScene({ state }: { state: GameState }) {
                       : 1,
                     "--face": face,
                     "--direction": a.facing,
+                    "--depth-scale": 0.93 + ((a.y - FIELD.top) / (FIELD.bottom - FIELD.top)) * 0.12,
                     "--feet-offset": `${feet[frame]}px`,
-                    "--head-offset": `${heads[frame]}px`,
                   } as CSSProperties
                 }
               >
@@ -183,9 +148,6 @@ export function CombatScene({ state }: { state: GameState }) {
                 </div>
                 {!dead && (
                   <>
-                    <span className="combat-name">
-                      {isHero ? "무인" : `${a.id + 1}`}
-                    </span>
                     <Meter
                       value={a.hp}
                       max={a.maxHp}
@@ -196,9 +158,6 @@ export function CombatScene({ state }: { state: GameState }) {
                     />
                   </>
                 )}
-                <span className="combat-intent">
-                  {isHero && a.pose === "approach" ? "추격" : poseText[a.pose]}
-                </span>
                 {a.numberUntil > motion.clock && (
                   <span className={`combat-number ${isHero ? "received" : ""}`}>
                     {a.number}
