@@ -333,3 +333,44 @@
 .animal.pose-down .combat-figure {
   transform: scaleX(var(--face)) rotate(8deg) scaleY(0.4);
 }
+
+/* Keep the field open and readable while the regional camera fills the viewport. */
+.game-shell:has(.combat-space) .location-kicker,
+.game-shell:has(.combat-space) .location-sub,
+.game-shell:has(.combat-space) .field-journal,
+.game-shell:has(.combat-space) .boss-prompt { display: none; }
+.game-shell:has(.combat-space) .location-plaque h1 { font-size: 20px; letter-spacing: 3px; }
+.game-shell:has(.combat-space) .hero-hud { width: 210px; padding: 7px; }
+.game-shell:has(.combat-space) .hud-portrait,
+.game-shell:has(.combat-space) .hero-hud-name small,
+.game-shell:has(.combat-space) .hero-bars > .meter.gold { display: none; }
+.game-shell:has(.combat-space) .resource-token { background: #e6e8c9b0; font-size: 10px; padding: 7px; min-width: 55px; }
+.game-shell .combat-space { left: 4%; right: 4%; top: 21%; bottom: 19%; }
+.arena-surround { position: absolute; inset: 0; }
+.game-shell:has(.combat-space) > .pixel-backdrop { visibility: hidden; }
+.combatant { transform: translate(-50%, -100%) scale(var(--depth-scale, 1)); transform-origin: 50% 100%; }
+.combat-footprint { bottom: -2px; height: 11px; width: 50px; border: 0; background: #253c3260; }
+.player .combat-footprint { background: #253c3260; border: 0; }
+.current-target .combat-footprint { background: #253c3260; border: 0; box-shadow: none; }
+.current-target .combat-footprint::after { content: ""; position: absolute; bottom: 0; left: 5px; right: 5px; height: 2px; background: #eed99a; }
+.combatant .meter { bottom: -10px; height: 4px; width: 42px; opacity: .85; }
+.combat-number { font-size: 17px; }
+.game-shell .spatial-enemy-hud { position: absolute; z-index: 3; top: 89px; left: 50%; transform: translateX(-50%); width: 220px; padding: 6px 10px; text-align: center; background: #344d3eaa; color: #f5edc9; border: 0; box-shadow: none; }
+.game-shell .spatial-enemy-hud > span { font-size: 10px; display: block; margin-bottom: 5px; }
+.game-shell .spatial-enemy-hud > small { font-size: 8px; display: block; margin-top: 4px; }
+.spatial-enemy-hud .meter { height: 4px; border-width: 1px; }
+.spatial-enemy-hud .meter > span { border: 0; }
+@media (max-width: 600px) {
+  .game-shell .combat-space { left: 1%; right: 1%; top: 22%; bottom: 25%; }
+  .game-shell .spatial-enemy-hud { top: 130px; width: 190px; }
+  .game-shell:has(.combat-space) .hero-hud { width: 148px; }
+  .game-shell:has(.combat-space) .location-plaque h1 { font-size: 17px; }
+}
+@media (max-width: 600px) and (max-height: 720px) {
+  .game-shell .spatial-enemy-hud { top: 96px; }
+  .game-shell .combat-space { top: 26%; bottom: 25%; }
+}
+@media (min-width: 601px) and (max-height: 500px) {
+  .game-shell .combat-space { left: 8%; right: 8%; top: 19%; bottom: 18%; }
+  .game-shell .spatial-enemy-hud { left: 14px; top: 78px; transform: none; width: 146px; }
+}
